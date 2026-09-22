@@ -69,6 +69,9 @@ data_egamma_2023postBPix='data_egamma_D,'
 data_muoneg_2023postBPix='data_muoneg_D,'
 data_mu_2023postBPix='data_mu_D,'
 
+data_egamma_2024='data_egamma_C,data_egamma_D,data_egamma_E,data_egamma_F,data_egamma_G,data_egamma_H,data_egamma_I,'
+data_mu_2024='data_mu_C,data_mu_D,data_mu_E,data_mu_F,data_mu_G,data_mu_H,data_mu_I,'
+
 bkg_dy='DYto2L_M_10to50_amcatnloFXFX,DYto2L_M_50_amcatnloFXFX,DYto2L_M_50_0J_amcatnloFXFX,DYto2L_M_50_1J_amcatnloFXFX,DYto2L_M_50_2J_amcatnloFXFX,DYto2Tau_MLL_50_0J_amcatnloFXFX,DYto2Tau_MLL_50_1J_amcatnloFXFX,DYto2Tau_MLL_50_2J_amcatnloFXFX,'
 bkg_dy_no_2Tau_1j='DYto2L_M_10to50_amcatnloFXFX,DYto2L_M_50_amcatnloFXFX,DYto2L_M_50_0J_amcatnloFXFX,DYto2L_M_50_1J_amcatnloFXFX,DYto2L_M_50_2J_amcatnloFXFX,DYto2Tau_MLL_50_0J_amcatnloFXFX,DYto2Tau_MLL_50_2J_amcatnloFXFX,'
 bkg_wj='WtoLNu_madgraphMLM,WtoLNu_1J_madgraphMLM,WtoLNu_2J_madgraphMLM,WtoLNu_3J_madgraphMLM,WtoLNu_4J_madgraphMLM,'
@@ -78,6 +81,16 @@ bkg_vh_htt='WminusHto2Tau_UncorrelatedDecay_UnFiltered,WplusHto2Tau_Uncorrelated
 bkg_higgs='GluGluHto2Tau_UncorrelatedDecay_SM_UnFiltered_ProdAndDecay,VBFHto2Tau_UncorrelatedDecay_UnFiltered,'
 bkg_top='TbarWplusto4Q,TWminusto4Q,TbarWplusto2L2Nu,TbarWplustoLNu2Q,TWminusto2L2Nu,TWminustoLNu2Q,'
 bkg_ttbar='TTto2L2Nu,TTto4Q,TTtoLNu2Q,'
+
+bkg_dy_2024='DYto2E_MLL_10to50_amcatnloFXFX,DYto2E_MLL_50_amcatnloFXFX,DYto2E_MLL_50_0J_amcatnloFXFX,DYto2E_MLL_50_1J_amcatnloFXFX,DYto2E_MLL_50_2J_amcatnloFXFX,DYto2Mu_MLL_10to50_amcatnloFXFX,DYto2Mu_MLL_50_amcatnloFXFX,DYto2Mu_MLL_50_0J_amcatnloFXFX,DYto2Mu_MLL_50_1J_amcatnloFXFX,DYto2Mu_MLL_50_2J_amcatnloFXFX,DYto2Tau_MLL_50_0J_amcatnloFXFX,DYto2Tau_MLL_50_1J_amcatnloFXFX,DYto2Tau_MLL_50_2J_amcatnloFXFX,'
+bkg_wj_2024='WtoLNu_1J_madgraphMLM,WtoLNu_2J_madgraphMLM,WtoLNu_3J_madgraphMLM,WtoLNu_4J_madgraphMLM,'
+bkg_vv_2024='WW,WZ,ZZ,'
+bkg_vvv_2024='WWW_4F,WWZ_4F,WZZ,ZZZ,'
+bkg_top_2024='TbarWplusto4Q,TWminusto4Q,TbarWplusto2L2Nu,TbarWplustoLNu2Q,TWminusto2L2Nu,TWminustoLNu2Q,'
+bkg_ttbar_2024='TTto2L2Nu,TTto4Q,TTtoLNu2Q,'
+bkg_higgs_2024='h_ggf_htt_sm_prod_sm_filtered,h_vbf_htt_sm_filtered,'
+bkg_vh_htt_2024='zh_htt_sm_filtered,wph_htt_sm_filtered,wmh_htt_sm_filtered,'
+
 signal='bbphi_phitt_100,ggphi_phitt_100'
 signal_bbh='bbphi_phitt_60,bbphi_phitt_65,bbphi_phitt_70,bbphi_phitt_75,bbphi_phitt_80,bbphi_phitt_85,bbphi_phitt_90,bbphi_phitt_95,bbphi_phitt_100,bbphi_phitt_105,bbphi_phitt_110,bbphi_phitt_115,bbphi_phitt_120,bbphi_phitt_125,bbphi_phitt_130,bbphi_phitt_135,bbphi_phitt_140,bbphi_phitt_160,bbphi_phitt_180,bbphi_phitt_200,bbphi_phitt_250,bbphi_phitt_300,bbphi_phitt_350,bbphi_phitt_400,bbphi_phitt_450,bbphi_phitt_500,bbphi_phitt_600,bbphi_phitt_700,bbphi_phitt_800,bbphi_phitt_900,bbphi_phitt_1000,bbphi_phitt_1100,bbphi_phitt_1200,bbphi_phitt_1400,bbphi_phitt_1600,bbphi_phitt_1800,bbphi_phitt_2000,bbphi_phitt_2300,bbphi_phitt_2600,bbphi_phitt_2900,bbphi_phitt_3200,bbphi_phitt_3500,'
 signal_ggf='ggphi_phitt_60,ggphi_phitt_65,ggphi_phitt_70,ggphi_phitt_75,ggphi_phitt_80,ggphi_phitt_85,ggphi_phitt_90,ggphi_phitt_95,ggphi_phitt_100,ggphi_phitt_105,ggphi_phitt_110,ggphi_phitt_115,ggphi_phitt_120,ggphi_phitt_125,ggphi_phitt_130,ggphi_phitt_135,ggphi_phitt_140,ggphi_phitt_160,ggphi_phitt_180,ggphi_phitt_200,ggphi_phitt_250,ggphi_phitt_300,ggphi_phitt_350,ggphi_phitt_400,ggphi_phitt_450,ggphi_phitt_500,ggphi_phitt_600,ggphi_phitt_700,ggphi_phitt_800,ggphi_phitt_900,ggphi_phitt_1000,ggphi_phitt_1100,ggphi_phitt_1200,ggphi_phitt_1400,ggphi_phitt_1600,ggphi_phitt_1800,ggphi_phitt_2000,ggphi_phitt_2300,ggphi_phitt_2600,ggphi_phitt_2900,ggphi_phitt_3200,ggphi_phitt_3500'
@@ -379,6 +392,35 @@ case $1 in
             processes="dy_lep,dy_tt_m50,st,tt,wj,vv,vvv"
             workflow='htcondor'
         ;;
+
+# ##############################
+# ########### 2024 #############
+# ##############################
+
+    "run3_2024_emu")
+            config="run3_2024_emu"
+            bkgs="${bkg_dy_2024}${bkg_wj_2024}${bkg_vv_2024}${bkg_vvv_2024}${bkg_vh_htt_2024}${bkg_higgs_2024}${bkg_top_2024}${bkg_ttbar_2024}"
+            datasets="${data_egamma_2024}${data_mu_2024}${bkgs}${signal_all}"
+            processes="data,dy_lep,dy_tt_m50,h_ggf_htt_sm_prod_sm,h_vbf_htt_sm,vh_htt,st,tt,wj,vv,vvv,${signal_all}"
+            categories='cat_emu_sr'
+            variables=$variables_emu
+            workflow='htcondor'
+        ;;
+
+    "run3_2024_emu_lim")
+            config="run3_2024_emu_limited"
+            data_sample="data_egamma_C"
+            dy_sample="DYto2Tau_MLL_50_0J_amcatnloFXFX"
+            signal_sample="ggphi_phitt_100"
+            datasets="${data_sample},${dy_sample},${signal_sample}"
+            processes="data,dy_tt_m50,ggphi_phitt_100"
+            categories="cat_emu_sr"
+            variables="${variables_emu}"
+            workflow="local"
+        ;;
+
+
+
     *)
     echo "Unknown run argument!"
     exit

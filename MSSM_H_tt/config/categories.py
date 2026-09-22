@@ -172,103 +172,105 @@ def add_categories(config: od.Config,
     
     add_base_categories(config, channel, category_map, base_selection)
     
-    from MSSM_H_tt.config.mass_points import read_bdt_masses
+    if config.x("enable_bdt_categories", False):
 
-    MASS_POINTS = read_bdt_masses()
+        from MSSM_H_tt.config.mass_points import read_bdt_masses
 
-    # Four-region BDT approach.
-    #
-    # The selections below are produced dynamically in categorization/main.py
-    # and read bdt_cat_M{mass} with the convention:
-    #
-    #   0 -> ggphi = max(P_ggphi, P_bbphi, P_DY, P_TT) is P_ggphi
-    #   1 -> bbphi = max(P_ggphi, P_bbphi, P_DY, P_TT) is P_bbphi
-    #   2 -> dy    = max(P_ggphi, P_bbphi, P_DY, P_TT) is P_DY
-    #   3 -> tt    = max(P_ggphi, P_bbphi, P_DY, P_TT) is P_TT
-    #
-    # Each category also declares its intended fit variable.
-    #
-    # The fit variables must be produced consistently by the BDT-score producer:
-    #
-    #   bdt_D_ggphi_M{mass}
-    #   bdt_D_bbphi_M{mass}
-    #   bdt_D_DY_M{mass}
-    #   bdt_D_TT_M{mass}
+        MASS_POINTS = read_bdt_masses()
 
-    bdt_cats_map = DotDict.wrap({})
-
-    bdt_regions = {
-        "ggphi": {
-            "label": "ggϕ",
-            "selection": "bdt_cat_ggphi",
-            "fit_var": "D_ggphi",
-        },
-        "bbphi": {
-            "label": "bbϕ",
-            "selection": "bdt_cat_bbphi",
-            "fit_var": "D_bbphi",
-        },
-
-        # Combined signal-like BDT region:
+        # Four-region BDT approach.
         #
-        # This category should select events where the BDT winner is either
-        # ggphi or bbphi, i.e.
+        # The selections below are produced dynamically in categorization/main.py
+        # and read bdt_cat_M{mass} with the convention:
         #
-        #   bdt_cat_M{m} == 0 or bdt_cat_M{m} == 1
+        #   0 -> ggphi = max(P_ggphi, P_bbphi, P_DY, P_TT) is P_ggphi
+        #   1 -> bbphi = max(P_ggphi, P_bbphi, P_DY, P_TT) is P_bbphi
+        #   2 -> dy    = max(P_ggphi, P_bbphi, P_DY, P_TT) is P_DY
+        #   3 -> tt    = max(P_ggphi, P_bbphi, P_DY, P_TT) is P_TT
         #
-        # It carries two fit variables:
+        # Each category also declares its intended fit variable.
         #
-        #   bdt_D_sig_vs_Disc_ggphi_M{m}  -> for ggphi extraction
-        #   bdt_D_sig_vs_Disc_bbphi_M{m}  -> for bbphi extraction
+        # The fit variables must be produced consistently by the BDT-score producer:
         #
-        "ggphi_and_bbphi": {
-            "label": "ggϕ + bbϕ",
-            "selection": "bdt_cat_ggphi_and_bbphi",
-            "fit_var": [
-                "D_sig_vs_Disc_ggphi",
-                "D_sig_vs_Disc_bbphi",
-            ],
-        },
+        #   bdt_D_ggphi_M{mass}
+        #   bdt_D_bbphi_M{mass}
+        #   bdt_D_DY_M{mass}
+        #   bdt_D_TT_M{mass}
 
-        "dy": {
-            "label": "DY",
-            "selection": "bdt_cat_dy",
-            "fit_var": "D_DY",
-        },
-        "tt": {
-            "label": "tt̄",
-            "selection": "bdt_cat_tt",
-            "fit_var": "D_TT",
-        },
-    }
+        bdt_cats_map = DotDict.wrap({})
 
-    for m in MASS_POINTS:
-        for region, spec in bdt_regions.items():
-            fit_vars = spec["fit_var"]
+        bdt_regions = {
+            "ggphi": {
+                "label": "ggϕ",
+                "selection": "bdt_cat_ggphi",
+                "fit_var": "D_ggphi",
+            },
+            "bbphi": {
+                "label": "bbϕ",
+                "selection": "bdt_cat_bbphi",
+                "fit_var": "D_bbphi",
+            },
 
-            if isinstance(fit_vars, str):
-                fit_vars = [fit_vars]
-
-            fit_vars = [
-                f"bdt_{fit_var}_M{m}"
-                for fit_var in fit_vars
-            ]
-
-            bdt_cats_map[f"bdt_{region}_M{m}"] = DotDict.wrap({
-                "selection": [
-                    f"{spec['selection']}_M{m}",
+            # Combined signal-like BDT region:
+            #
+            # This category should select events where the BDT winner is either
+            # ggphi or bbphi, i.e.
+            #
+            #   bdt_cat_M{m} == 0 or bdt_cat_M{m} == 1
+            #
+            # It carries two fit variables:
+            #
+            #   bdt_D_sig_vs_Disc_ggphi_M{m}  -> for ggphi extraction
+            #   bdt_D_sig_vs_Disc_bbphi_M{m}  -> for bbphi extraction
+            #
+            "ggphi_and_bbphi": {
+                "label": "ggϕ + bbϕ",
+                "selection": "bdt_cat_ggphi_and_bbphi",
+                "fit_var": [
+                    "D_sig_vs_Disc_ggphi",
+                    "D_sig_vs_Disc_bbphi",
                 ],
-                "label": f"BDT cat. {spec['label']} (M={m})",
-                "aux": {
-                    "fit_var": fit_vars,
-                },
-            })
+            },
 
-    create_child_categories(
-        config,
-        parent_categories=config.categories.names(),
-        child_category_map=bdt_cats_map,
-    )
+            "dy": {
+                "label": "DY",
+                "selection": "bdt_cat_dy",
+                "fit_var": "D_DY",
+            },
+            "tt": {
+                "label": "tt̄",
+                "selection": "bdt_cat_tt",
+                "fit_var": "D_TT",
+            },
+        }
+
+        for m in MASS_POINTS:
+            for region, spec in bdt_regions.items():
+                fit_vars = spec["fit_var"]
+
+                if isinstance(fit_vars, str):
+                    fit_vars = [fit_vars]
+
+                fit_vars = [
+                    f"bdt_{fit_var}_M{m}"
+                    for fit_var in fit_vars
+                ]
+
+                bdt_cats_map[f"bdt_{region}_M{m}"] = DotDict.wrap({
+                    "selection": [
+                        f"{spec['selection']}_M{m}",
+                    ],
+                    "label": f"BDT cat. {spec['label']} (M={m})",
+                    "aux": {
+                        "fit_var": fit_vars,
+                    },
+                })
+
+        create_child_categories(
+            config,
+            parent_categories=config.categories.names(),
+            child_category_map=bdt_cats_map,
+        )
 
     # # if channel=='emu':
     # #     from IPython import embed; embed()

@@ -263,11 +263,14 @@ def main(self: Producer, events: ak.Array, **kwargs) -> ak.Array:
     print("Producing D_zeta features...")
     events = self[D_zeta](events, **kwargs)
 
-    print("Producing BDT scores...")
-    events = self[mssm_bdt_score](events, **kwargs)
+    #------------------------------------------------------------
+    # Commenting out BDT score and 2D variables for now, for testing purposes
+    #------------------------------------------------------------
+    # print("Producing BDT scores...")
+    # events = self[mssm_bdt_score](events, **kwargs)
 
-    print("Producing BDT variables...")
-    events = self[bdt_2d_variables](events, **kwargs)
+    # print("Producing BDT variables...")
+    # events = self[bdt_2d_variables](events, **kwargs)
 
     print("Producing category ids...")
     events = self[category_ids](events, **kwargs)
@@ -309,29 +312,49 @@ def main(self: Producer, events: ak.Array, **kwargs) -> ak.Array:
         print("Producing Tau weights...")
         events = self[tau_weight](events, do_syst=True, **kwargs)
 
-        print("Producing btag SF fixed WP approach...")
-        year = self.config_inst.x.year
-        tag = self.config_inst.x.tag
-        btag_wp = self.config_inst.x.btag_working_points[year][tag].particleNet.medium
+        year = int(self.config_inst.x.year)
 
-        dis = events.Jet.btagPNetB
-        nan_mask = np.isnan(dis)
-        mask = ~np.isnan(dis)
+        # TODO: Placeholder. 2024 b-tag SFs not available
+        
+        if year == 2024:
+            events = set_ak_column_f32(
+                events,
+                "btag_weight",
+                ak.ones_like(events.event, dtype=np.float32),
+            )
 
-        Jet = events.Jet[mask]
+        else:
+            print("Producing btag SF fixed WP approach...")
 
-        jet_selections = {
-            "jet_pt_20": Jet.pt > 20.0,
-            "jet_eta_2.5": abs(Jet.eta) < 2.5,
-            "jet_id": Jet.pass_tightID_lep_veto,
-            "btag_wp_medium": Jet.btagPNetB >= btag_wp,
-        }
-        jet_obj_mask = ak.ones_like(Jet.pt, dtype=np.bool_)
-        for the_sel in jet_selections.values():
-            jet_obj_mask = jet_obj_mask & the_sel
+            tag = self.config_inst.x.tag
 
-        print("Producing btag SF weights...")
-        events = self[btag_weight_SF](events, do_syst=True, **kwargs)
+            wps = self.config_inst.x.btag_working_points[year][tag]
+            tagger = self.config_inst.x.btag_tagger
+            discriminator = self.config_inst.x.btag_discriminator
+            wp_name = self.config_inst.x.btag_wp
+
+            btag_wp = getattr(getattr(wps, tagger), wp_name)
+
+            dis = events.Jet[discriminator]
+
+            nan_mask = np.isnan(dis)
+            mask = ~nan_mask
+
+            Jet = events.Jet[mask]
+
+            jet_selections = {
+                "jet_pt_20": Jet.pt > 20.0,
+                "jet_eta_2.5": abs(Jet.eta) < 2.5,
+                "jet_id": Jet.pass_tightID_lep_veto,
+                "btag_wp_medium": Jet[discriminator] >= btag_wp,
+            }
+
+            jet_obj_mask = ak.ones_like(Jet.pt, dtype=np.bool_)
+            for the_sel in jet_selections.values():
+                jet_obj_mask = jet_obj_mask & the_sel
+
+            print("Producing btag SF weights...")
+            events = self[btag_weight_SF](events, do_syst=True, **kwargs)
 
         print("Producing GenPartonTop...")
         events = self[gen_parton_top](events, **kwargs)

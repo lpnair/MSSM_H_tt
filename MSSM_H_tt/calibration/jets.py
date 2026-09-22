@@ -766,18 +766,37 @@ def jer(self: Calibrator, events: ak.Array, **kwargs) -> ak.Array:
         jer[jec_var] = ak_evaluate(self.evaluators["jer"], *inputs)
 
     # extract scale factors
+    year = self.config_inst.campaign.x.year
     jersf = {}
-    for jer_var in self.jer_variations:
-        _variable_map = variable_map | {"systematic": jer_var}
-        inputs = [_variable_map[inp.name] for inp in self.evaluators["sf"].inputs]
-        jersf[jer_var] = ak_evaluate(self.evaluators["sf"], *inputs)
+
+    if year == 2024:
+        # In newer json files, ScaleFactor contains only the nominal SF
+        inputs = [variable_map[inp.name] for inp in self.evaluators["sf"].inputs]
+        sf_nom = ak_evaluate(self.evaluators["sf"],*inputs)
+
+        # SFUncertainty contains the relative uncertainty
+        unc_inputs = [variable_map[inp.name] for inp in self.evaluators["sf_unc"].inputs]
+        sf_unc = ak_evaluate(self.evaluators["sf_unc"], *unc_inputs)
+
+        jersf[jer_nom] = sf_nom
+        jersf[jer_up] = sf_nom * (1.0 + sf_unc)
+        jersf[jer_down] = sf_nom * (1.0 - sf_unc)
+
+    else:
+        # for older json structure
+        for jer_var in self.jer_variations:
+            _variable_map = variable_map | {"systematic": jer_var}
+            inputs = [_variable_map[inp.name] for inp in self.evaluators["sf"].inputs]
+            jersf[jer_var] = ak_evaluate(self.evaluators["sf"], *inputs)
 
     # extract scale factors for jec uncertainties
     for jec_var in self.jec_variations:
         _variable_map = variable_map | {"JetPt": events[jet_name][f"pt_{jec_var}"]}
+        if year != 2024:
+            _variable_map["systematic"] = jer_nom 
         inputs = [_variable_map[inp.name] for inp in self.evaluators["sf"].inputs]
         jersf[jec_var] = ak_evaluate(self.evaluators["sf"], *inputs)
-
+        
     # array with all JER scale factor variations as an additional axis
     # (note: axis needs to be regular for broadcasting to work correctly)
     jer = ak_concatenate_safe(
@@ -958,10 +977,17 @@ def jer_setup(
 
     # compute JER keys from config information
     jer_cfg = self.get_jer_config()
+    year = self.config_inst.campaign.x.year
+
     jer_keys = {
         "jer": f"{jer_cfg.campaign}_{jer_cfg.version}_MC_PtResolution_{jer_cfg.jet_type}",
         "sf": f"{jer_cfg.campaign}_{jer_cfg.version}_MC_ScaleFactor_{jer_cfg.jet_type}",
     }
+
+    if year == 2024:
+        jer_keys["sf_unc"] = (
+            f"{jer_cfg.campaign}_{jer_cfg.version}_MC_SFUncertainty_{jer_cfg.jet_type}"
+        )
 
     # store the evaluators
     self.evaluators = {

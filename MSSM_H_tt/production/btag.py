@@ -32,6 +32,13 @@ def btag_weight(
     do_syst: bool,
     **kwargs,  
 ) -> ak.Array:
+
+    if self.config_inst.x.btag_sf is None:
+        return set_ak_column_f32(
+            events,
+            "btag_weight_nom",
+            np.ones(len(events), dtype=np.float32),
+        )
     
     shifts = ["central"]
     if do_syst: shifts=[*shifts] 
@@ -113,6 +120,10 @@ def btag_weight_setup(
     reader_targets: law.util.InsertableDict,
     **kwargs,
 ) -> None:
+
+    if self.config_inst.x.btag_sf is None:
+        self.btag_sf_corr = None
+        return
    
     bundle = reqs["external_files"]
     import correctionlib

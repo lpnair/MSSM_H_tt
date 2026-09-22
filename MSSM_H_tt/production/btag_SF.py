@@ -144,11 +144,21 @@ def _evaluate_btag_efficiencies(
 
 
 @producer(
+    # uses={
+    #     *{f"Jet.{var}" for var in [
+    #         "pt", "eta", "phi", "mass",
+    #         "btagPNetB", "pass_tightID_lep_veto", "hadronFlavour",
+    #     ]},
+    #     "event",
+    # },
     uses={
-        *{f"Jet.{var}" for var in [
-            "pt", "eta", "phi", "mass",
-            "btagPNetB", "pass_tightID_lep_veto", "hadronFlavour",
-        ]},
+        "Jet.pt",
+        "Jet.eta",
+        "Jet.phi",
+        "Jet.mass",
+        optional("Jet.btagPNetB"),
+        optional("Jet.pass_tightID_lep_veto"),
+        optional("Jet.hadronFlavour"),
         "event",
     },
     produces={
@@ -166,9 +176,19 @@ def btag_weight_SF(
     **kwargs,
 ) -> ak.Array:
 
+    year = self.config_inst.x.year
+
+    # Temporary: no 2024 b-tag SF implementation
+    if year == 2024:
+        return set_ak_column_f32(
+            events,
+            "btag_weight",
+            ak.ones_like(events.event, dtype=np.float32),
+        )
+
     systs = JET_SHAPE_SYSTEMATICS if do_syst else ("central",)
 
-    year = self.config_inst.x.year
+    #year = self.config_inst.x.year
     tag = self.config_inst.x.tag
     btag_wp = self.config_inst.x.btag_working_points[year][tag].particleNet.medium
 
@@ -244,6 +264,10 @@ def btag_weight_SF_requires(
     reqs: dict,
     **kwargs,
 ) -> None:
+
+    if self.config_inst.x.year == 2024:
+        return
+    
     from columnflow.tasks.selection import MergeSelectionStats
     reqs["selection_stats"] = MergeSelectionStats.req_different_branching(
         task,
@@ -266,6 +290,10 @@ def btag_weight_SF_setup(
     reader_targets: InsertableDict,
     **kwargs,
 ) -> None:
+
+    if self.config_inst.x.year == 2024:
+        return
+
     self._selection_stats = task.cached_value(
         key="selection_stats",
         func=lambda: inputs["selection_stats"]["stats"].load(formatter="json"),
@@ -282,7 +310,7 @@ def btag_weight_SF_setup(
         formatter="gzip",
     )
 
-    if self.config_inst.x.year >= 2022:
+    if self.config_inst.x.year in (2022, 2023):
         self.btag_sf_corr = sf_cset[self.config_inst.x.btag_sf_pnet.correction_set]
     else:
         self.btag_sf_corr = sf_cset[self.config_inst.x.btag_sf_deepjet.correction_set]

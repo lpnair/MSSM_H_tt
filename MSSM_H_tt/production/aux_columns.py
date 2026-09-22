@@ -4,7 +4,11 @@ Produce channel_id column. This function is called in the main selector
 
 from columnflow.production import Producer, producer
 from columnflow.selection import Selector, SelectionResult, selector
-from columnflow.columnar_util import set_ak_column, EMPTY_FLOAT
+from columnflow.columnar_util import (
+    set_ak_column, 
+    EMPTY_FLOAT,
+    optional_column as optional,
+)
 from columnflow.util import maybe_import, DotDict
 from MSSM_H_tt.util import get_lep_p4, get_vec_p3, to_pt_eta_phi_m
 
@@ -113,14 +117,20 @@ def _clean_taggable_jets(self, events):
     return ak.drop_none(ak.mask(sorted_jets, mask))
 
 
-def _clean_bjets(self, events, wp_name="medium"):
+def _clean_bjets(self, events):
     """
-    Clean b-jets against the two selected leptons and apply ParticleNet WP.
+    Clean b-jets against the two selected leptons and apply btag WP.
     """
-    year = self.config_inst.x.year
+    year = int(self.config_inst.x.year)
     tag = self.config_inst.x.tag
-    particle_net_wps = self.config_inst.x.btag_working_points[year][tag].particleNet
-    btag_wp = getattr(particle_net_wps, wp_name)
+
+    wps = self.config_inst.x.btag_working_points[year][tag]
+
+    tagger = self.config_inst.x.btag_tagger
+    discriminator = self.config_inst.x.btag_discriminator
+    wp_name = self.config_inst.x.btag_wp
+
+    btag_wp = getattr(getattr(wps, tagger), wp_name)
 
     jet_pt_sorted_idx = ak.argsort(events.Jet.pt, axis=1, ascending=False)
     sorted_jets = events.Jet[jet_pt_sorted_idx]
@@ -129,7 +139,7 @@ def _clean_bjets(self, events, wp_name="medium"):
         (sorted_jets.pt > 20.0)
         & (np.abs(sorted_jets.eta) < 2.5)
         & sorted_jets.pass_tightID_lep_veto
-        & (sorted_jets.btagPNetB >= btag_wp)
+        & (sorted_jets[discriminator] >= btag_wp)
     )
     hcand = events["hcand_emu"]
     for lep_str in ["lep0", "lep1"]:
@@ -200,11 +210,11 @@ def create_jetID_masks(
         **kwargs
 ) -> ak.Array:
     """
-    For nanoaod v13 and v14 jetID is bugged, so there is a special procedure to apply Tight jet ID 
+    For nanoaod v13 and v14 jetID is bugged, so there is a special procedure to apply Tight jet ID. v15 does not contain the jetID branch.
     """
     nano_version = self.config_inst.campaign.x.version
     jets = events.Jet
-    if nano_version in [13, 14]:
+    if nano_version in [13, 14, 15]:
         print(f'Applying custom tightJetID for nanoAOD v{nano_version}...')
         tightID_eta_2p6 = ((jets.neHEF < 0.99)
                            & (jets.neEmEF < 0.9)
@@ -242,7 +252,7 @@ def create_jetID_masks(
 
 @producer(
     uses={f"Jet.{var}" for var in [
-        "pt", "eta", "phi", "mass", "btagDeepFlavB", "btagPNetB", "pass_tightID_lep_veto",
+        "pt", "eta", "phi", "mass", "pass_tightID_lep_veto",
     ]} | {f"hcand_emu.lep0.{var}" for var in [
         "jetIdx", "pt", "eta", "phi", "mass", "ip_sig", "charge",
     ]} | {f"hcand_emu.lep1.{var}" for var in [
@@ -391,7 +401,7 @@ def jet_pt_def(
 
 @producer(
     uses={f"Jet.{var}" for var in [
-        "pt", "eta", "phi", "mass", "btagDeepFlavB", "btagPNetB", "pass_tightID_lep_veto",
+        "pt", "eta", "phi", "mass", "pass_tightID_lep_veto",
     ]} | {f"hcand_emu.lep0.{var}" for var in ["jetIdx", "pt", "eta", "phi", "mass", "ip_sig", "charge",
     ]} | {f"hcand_emu.lep1.{var}" for var in ["jetIdx", "pt", "eta", "phi", "mass", "ip_sig", "charge",]},
     produces={"n_jets_tag"},
@@ -454,9 +464,15 @@ def jets_taggable(
 
 
 @producer(
-    uses={f"Jet.{var}" for var in [
-        "pt", "eta", "phi", "mass", "btagDeepFlavB", "btagPNetB", "pass_tightID_lep_veto",
-    ]} | {f"hcand_emu.lep0.{var}" for var in [
+    uses={
+        "Jet.pt",
+        "Jet.eta",
+        "Jet.phi",
+        "Jet.mass",
+        "Jet.pass_tightID_lep_veto",
+        optional("Jet.btagPNetB"),
+        optional("Jet.btagUParTAK4B"),
+    } | {f"hcand_emu.lep0.{var}" for var in [
         "jetIdx", "pt", "eta", "phi", "mass", "ip_sig", "charge",
     ]} | {f"hcand_emu.lep1.{var}" for var in [
         "jetIdx", "pt", "eta", "phi", "mass", "ip_sig", "charge",
@@ -485,18 +501,29 @@ def number_b_jet(
       - sublead_b_jet.{pt,eta,phi,mass}
       - di_b_jet.{pt,eta,phi,mass,deltaeta,deltaphi,delta_r}
     """
-    year = self.config_inst.x.year
+    year = int(self.config_inst.x.year)
     tag = self.config_inst.x.tag
-    btag_wp = self.config_inst.x.btag_working_points[year][tag].particleNet.medium
 
-    jet_pt_sorted_idx = ak.argsort(events.Jet.pt, axis=1, ascending=False)
+    wps = self.config_inst.x.btag_working_points[year][tag]
+
+    tagger = self.config_inst.x.btag_tagger
+    discriminator = self.config_inst.x.btag_discriminator
+    wp_name = self.config_inst.x.btag_wp
+
+    btag_wp = getattr(getattr(wps, tagger), wp_name)
+
+    jet_pt_sorted_idx = ak.argsort(
+        events.Jet.pt,
+        axis=1,
+        ascending=False,
+    )
     sorted_jets = events.Jet[jet_pt_sorted_idx]
 
     jet_selections = {
         "jet_pt_20": sorted_jets.pt > 20.0,
         "jet_eta_2.5": abs(sorted_jets.eta) < 2.5,
         "jet_id": sorted_jets.pass_tightID_lep_veto,
-        "btag_wp_medium": sorted_jets.btagPNetB >= btag_wp,
+        "btag_wp_medium": sorted_jets[discriminator] >= btag_wp,
     }
 
     jet_obj_mask = ak.ones_like(jet_pt_sorted_idx, dtype=np.bool_)

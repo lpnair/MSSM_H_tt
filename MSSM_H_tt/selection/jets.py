@@ -13,6 +13,8 @@ from law.util import InsertableDict
 from columnflow.columnar_util import EMPTY_FLOAT, set_ak_column, flat_np_view, optional_column as optional
 from columnflow.types import Any
 from MSSM_H_tt.util import get_lep_p4, get_vec_p3, to_pt_eta_phi_m
+from MSSM_H_tt.production.aux_columns import create_jetID_masks
+from columnflow.columnar_util import set_ak_column, flat_np_view
 
 np = maybe_import("numpy")
 ak = maybe_import("awkward")
@@ -28,8 +30,8 @@ logger = law.logger.get_logger(__name__)
 
 @selector(
     uses={
-        "Jet.{pt,eta,phi,mass,jetId,chEmEF,neEmEF}", 
-        "Muon.{pt,eta,phi,mass,isPFcand}",
+        create_jetID_masks,
+        "Jet.{pt,eta,phi,mass,chEmEF,neEmEF,pass_tightID_lep_veto}", 
         optional("Jet.puId"),
     },
     produces={"Jet.veto_map_mask"},
@@ -61,14 +63,12 @@ def jet_veto_map(
     documentation: https://cms-jerc.web.cern.ch/Recommendations/#jet-veto-maps
     """
     jet = events.Jet
-    muon = events.Muon[events.Muon.isPFcand]
 
     # loose jet selection
     jet_mask = (
         (jet.pt > 15) &
-        (jet.jetId >= 2) &  # tight id 
-        ((jet.chEmEF + jet.neEmEF)< 0.9) &
-        ak.all(events.Jet.metric_table(muon) >= 0.2, axis=2)
+        jet.pass_tightID_lep_veto &
+        ((jet.chEmEF + jet.neEmEF) < 0.9) # https://cms-nanoaod-integration.web.cern.ch/commonJSONSFs/summaries/JME_2022_Prompt_jetvetomaps.html
     )
 
     # apply loose Jet puId in Run 2 to jets with pt below 50 GeV
@@ -119,14 +119,22 @@ def jet_veto_map(
 
     # evalute the veto map only for selected jets
     # (a map value of != 0 means the jet is vetoed)
-    veto_mask = jet_mask
-    jet_veto = (self.veto_map(*inputs) != 0)
-    # store the per-jet veto mask
-    events = set_ak_column(events, "Jet.veto_map_mask", veto_mask)
+    jet_veto = ak.fill_none(self.veto_map(*inputs) != 0, False)
+
+    veto_mask = ak.zeros_like(jet.pt, dtype=np.bool_)
+    flat_veto_mask = flat_np_view(veto_mask)
+    flat_jet_mask = flat_np_view(jet_mask)
+    flat_veto_mask[flat_jet_mask] = np.asarray(ak.flatten(jet_veto))
+
+    events = set_ak_column(
+        events,
+        "Jet.veto_map_mask",
+        veto_mask,
+    )
 
     # create the selection result
     results = SelectionResult(
-        steps={"jet_veto_map": ~ak.any(jet_veto, axis=1)},
+        steps={"jet_veto_map": ~ak.any(veto_mask, axis=1)},
     )
 
     return events, results
