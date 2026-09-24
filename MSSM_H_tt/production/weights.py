@@ -586,10 +586,9 @@ def filter_weight(self: Producer, events: ak.Array, **kwargs) -> ak.Array:
     """
     This function applies filter weights to the datasets 
     """
-    datasets  = self.dataset_inst.keys
-    is_filtered = ['Filtered' in the_name for the_name in datasets]
-    if np.any(is_filtered):
-        dataset_name = datasets[0].replace('/','')
+    dataset_name  = self.dataset_inst.name
+    is_filtered = (('Filtered' in dataset_name) or ('filtered' in dataset_name))
+    if is_filtered:
         the_weight = self.lookup_table[dataset_name]['filter_efficiency']
         print(f'Filter efficiency for {dataset_name} is {the_weight}')
         filter_weight = np.full_like(events.event, the_weight, dtype=np.float32)

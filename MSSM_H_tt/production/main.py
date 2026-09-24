@@ -16,7 +16,7 @@ from columnflow.columnar_util import optional_column as optional
 from columnflow.production.util import attach_coffea_behavior
 
 from MSSM_H_tt.production.pileup import pu_weight
-from MSSM_H_tt.production.weights import muon_weight, tau_weight, electron_weight, trigger_sf
+from MSSM_H_tt.production.weights import muon_weight, tau_weight, electron_weight, trigger_sf, filter_weight
 from MSSM_H_tt.production.sample_split import split_dy
 from MSSM_H_tt.production.generatorZ import generatorZ
 from MSSM_H_tt.production.dilepton_features import hcand_fields, hcand_mt
@@ -144,6 +144,7 @@ def build_recoilcorrmet_passthrough(events: ak.Array) -> ak.Array:
         gen_dilepton,
         recoil_corrected_met,
         trigger_sf,
+        filter_weight,
         mssm_bdt_score,
         fastMTT,
         pt_H,
@@ -165,6 +166,7 @@ def build_recoilcorrmet_passthrough(events: ak.Array) -> ak.Array:
         tau_weight,
         electron_weight,
         trigger_sf,
+        filter_weight,
         generatorZ,
         zpt_weight,
         hcand_fields,
@@ -311,6 +313,9 @@ def main(self: Producer, events: ak.Array, **kwargs) -> ak.Array:
 
         print("Producing Tau weights...")
         events = self[tau_weight](events, do_syst=True, **kwargs)
+
+        print("Producing filter weights...")
+        events = self[filter_weight](events, **kwargs)
 
         year = int(self.config_inst.x.year)
 

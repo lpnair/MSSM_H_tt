@@ -1198,7 +1198,8 @@ def add_run3(ana: od.Analysis,
         "jet_veto_map"                  : (f"{corrections_dir}POG/JME/{year}_{tag}/jetvetomaps.json.gz", "v2"),
         "btag_sf_corr"                  : (f"{corrections_dir}POG/BTV/{year}_{tag}/btagging.json.gz", "v2"),
         "btag_eff_corr"                 : (f"{btag_eff_path}/btag_eff_maps_emu_2023_postBPix.json", "v2"),
-        "met_recoil"                    : f"{corrections_dir}DY_Zpt_recoil/DY_pTll_recoil_corrections_2024_v5.json.gz"
+        "met_recoil"                    : f"{corrections_dir}DY_Zpt_recoil/DY_pTll_recoil_corrections_2024_v5.json.gz",
+        "filter_eff"                    : f"{corrections_dir}Filter_eff/2024/filter_efficiencies.yaml"
     })
     
     cfg.x.external_files = jsons_2024_nanov15
@@ -1451,6 +1452,7 @@ def add_run3(ana: od.Analysis,
         "electron_weight": get_shifts("electron_weight"), 
         "top_pt_weight" : get_shifts("top_pt_weight"),     
         "Trigger_SF_weight": get_shifts("Trigger_SF_weight"),
+        "filter_weight": [],
         "stitching_weight": [],
         "btag_weight":get_shifts(*(f"btag_weight_{unc}" for unc in cfg.x.btag_unc_names)),
         "lhe_weight" : get_shifts("CMS_Scale_muR","CMS_Scale_muF"),
@@ -1528,23 +1530,23 @@ def add_run3(ana: od.Analysis,
         })
         
     stitch_samples = [
-            "DYto2L_M_50_amcatnloFXFX",
-            "DYto2L_M_50_0J_amcatnloFXFX",
-            "DYto2L_M_50_1J_amcatnloFXFX",
-            "DYto2L_M_50_2J_amcatnloFXFX",
-            "DYto2E_M_50_amcatnloFXFX",
-            "DYto2E_M_50_0J_amcatnloFXFX",
-            "DYto2E_M_50_1J_amcatnloFXFX",
-            "DYto2E_M_50_2J_amcatnloFXFX",
-            "DYto2Mu_M_50_amcatnloFXFX",
-            "DYto2Mu_M_50_0J_amcatnloFXFX",
-            "DYto2Mu_M_50_1J_amcatnloFXFX",
-            "DYto2Mu_M_50_2J_amcatnloFXFX",
-            "WtoLNu_1J_madgraphMLM",
-            "WtoLNu_2J_madgraphMLM",
-            "WtoLNu_3J_madgraphMLM",
-            "WtoLNu_4J_madgraphMLM",
-            "WtoLNu_madgraphMLM",
+            # "DYto2L_M_50_amcatnloFXFX",
+            # "DYto2L_M_50_0J_amcatnloFXFX",
+            # "DYto2L_M_50_1J_amcatnloFXFX",
+            # "DYto2L_M_50_2J_amcatnloFXFX",
+            "DYto2E_MLL_50_amcatnloFXFX",
+            "DYto2E_MLL_50_0J_amcatnloFXFX",
+            "DYto2E_MLL_50_1J_amcatnloFXFX",
+            "DYto2E_MLL_50_2J_amcatnloFXFX",
+            "DYto2Mu_MLL_50_amcatnloFXFX",
+            "DYto2Mu_MLL_50_0J_amcatnloFXFX",
+            "DYto2Mu_MLL_50_1J_amcatnloFXFX",
+            "DYto2Mu_MLL_50_2J_amcatnloFXFX",
+            # "WtoLNu_1J_madgraphMLM",
+            # "WtoLNu_2J_madgraphMLM",
+            # "WtoLNu_3J_madgraphMLM",
+            # "WtoLNu_4J_madgraphMLM",
+            # "WtoLNu_madgraphMLM",
         ]
 
     cfg.x.stitch_samples = stitch_samples
